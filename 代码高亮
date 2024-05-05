@@ -1,0 +1,36 @@
+#划分训练集和测试集，80% 作为训练集
+train_size = int(len(data_X) * 0.8)
+test_size = len(data_X) - train_size
+train_X = data_X[:train_size]
+train_Y = data_Y[:train_size]
+test_X = data_X[train_size:]
+test_Y = data_Y[train_size:]
+ 
+# 设置LSTM能识别的数据类型，形成tran_X的一维两个参数的数组，train_Y的一维一个参数的数组。并转化为tensor类型
+
+# 把list转numpy三维数组，第一维自适应
+train_X = train_X.reshape(-1, 1, input_len)
+train_Y = train_Y.reshape(-1, 1, label_len)
+test_X = test_X.reshape(-1, 1, input_len)
+# numpy数组转tensor
+train_x = torch.from_numpy(train_X)
+train_y = torch.from_numpy(train_Y)
+test_x = torch.from_numpy(test_X)
+ 
+# 建立LSTM模型，第一层为LSTM神经网络，第二层为一个全连接层。
+from torch import nn
+from torch.autograd import Variable
+ 
+class lstm(nn.Module):
+    def __init__(self,input_size=input_len,hidden_size=input_len,output_size=label_len,num_layer=2):
+        super(lstm,self).__init__()
+        self.layer1 = nn.LSTM(input_size,hidden_size,num_layer)
+        self.layer2 = nn.Linear(hidden_size,output_size)
+    
+    def forward(self,x):
+        x,_=self.layer1(x)
+        s,b,h=x.size()
+        x=x.view(s*b,h)
+        x=self.layer2(x)
+        x=x.view(s,b,-1)
+        return x
